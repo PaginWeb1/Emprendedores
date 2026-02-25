@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EmprendePro</title>
+
+<style>
+body{
+    margin:0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg,#ff4ecd,#6a5cff);
+    color:#333;
+}
+
+/* CONTENEDOR PRINCIPAL */
+.container{
+    max-width:1200px;
+    margin:auto;
+    padding:20px;
+}
+
+/* TARJETAS */
+.card{
+    background:white;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.2);
+    margin-bottom:20px;
+}
+
+/* INPUTS */
+input, select{
+    padding:10px;
+    margin:5px 0;
+    width:100%;
+    border-radius:8px;
+    border:1px solid #ccc;
+}
+
+/* BOTONES */
+button{
+    background:#ff4ecd;
+    color:white;
+    border:none;
+    padding:10px;
+    border-radius:8px;
+    cursor:pointer;
+    margin-top:10px;
+}
+
+button:hover{
+    background:#e03fb8;
+}
+
+/* MENU */
+.menu{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+}
+
+.menu button{
+    flex:1;
+}
+
+/* TABLA RESPONSIVE */
+.table-container{
+    overflow-x:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th, td{
+    padding:10px;
+    text-align:left;
+    border-bottom:1px solid #ddd;
+}
+
+/* DASHBOARD CARDS */
+.stats{
+    display:flex;
+    gap:15px;
+    flex-wrap:wrap;
+}
+
+.stat-box{
+    flex:1;
+    min-width:150px;
+    background:#f7f7f7;
+    padding:15px;
+    border-radius:10px;
+    text-align:center;
+    font-weight:bold;
+}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+    .stats{
+        flex-direction:column;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- LOGIN -->
+<div id="authSection" class="card">
+    <h2>EmprendePro 💜</h2>
+    <input type="text" id="usuario" placeholder="Usuario">
+    <input type="password" id="password" placeholder="Contraseña">
+    <button onclick="registrar()">Registrarse</button>
+    <button onclick="login()">Ingresar</button>
+</div>
+
+<!-- SISTEMA -->
+<div id="sistema" style="display:none;">
+
+<div class="menu">
+    <button onclick="mostrar('dashboard')">Dashboard</button>
+    <button onclick="mostrar('inventario')">Inventario</button>
+    <button onclick="mostrar('ventas')">Ventas</button>
+    <button onclick="logout()">Salir</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="card">
+    <h3>Resumen del Negocio</h3>
+    <div class="stats">
+        <div class="stat-box">Productos: <span id="totalProductos">0</span></div>
+        <div class="stat-box">Ventas: $<span id="totalVentas">0</span></div>
+    </div>
+</div>
+
+<!-- INVENTARIO -->
+<div id="inventario" class="card" style="display:none;">
+    <h3>Inventario</h3>
+    <input type="text" id="nombreProducto" placeholder="Nombre Producto">
+    <input type="number" id="cantidadProducto" placeholder="Cantidad">
+    <input type="number" id="precioProducto" placeholder="Precio">
+    <button onclick="agregarProducto()">Agregar Producto</button>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Cantidad</th>
+                    <th>Precio</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+            <tbody id="tablaInventario"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- VENTAS -->
+<div id="ventas" class="card" style="display:none;">
+    <h3>Registrar Venta</h3>
+    <select id="productoVenta"></select>
+    <input type="number" id="cantidadVenta" placeholder="Cantidad">
+    <button onclick="registrarVenta()">Vender</button>
+</div>
+
+</div>
+</div>
+
+<script>
+let usuarioActivo = null;
+
+function registrar(){
+    const user = usuario.value;
+    const pass = password.value;
+    localStorage.setItem(user, JSON.stringify({password:pass, productos:[], ventas:[]}));
+    alert("Usuario registrado");
+}
+
+function login(){
+    const user = usuario.value;
+    const pass = password.value;
+    const data = JSON.parse(localStorage.getItem(user));
+
+    if(data && data.password === pass){
+        usuarioActivo = user;
+        authSection.style.display="none";
+        sistema.style.display="block";
+        actualizarTodo();
+    }else{
+        alert("Credenciales incorrectas");
+    }
+}
+
+function logout(){
+    usuarioActivo=null;
+    sistema.style.display="none";
+    authSection.style.display="block";
+}
+
+function mostrar(seccion){
+    dashboard.style.display="none";
+    inventario.style.display="none";
+    ventas.style.display="none";
+    document.getElementById(seccion).style.display="block";
+}
+
+function obtenerData(){
+    return JSON.parse(localStorage.getItem(usuarioActivo));
+}
+
+function guardarData(data){
+    localStorage.setItem(usuarioActivo, JSON.stringify(data));
+}
+
+function agregarProducto(){
+    let data = obtenerData();
+    const nuevo = {
+        id: Date.now(), // ID corregido
+        nombre: nombreProducto.value,
+        cantidad: parseInt(cantidadProducto.value),
+        precio: parseFloat(precioProducto.value),
+        fecha: new Date().toLocaleDateString() // Fecha corregida
+    };
+    data.productos.push(nuevo);
+    guardarData(data);
+    actualizarTodo();
+}
+
+function registrarVenta(){
+    let data = obtenerData();
+    const id = parseInt(productoVenta.value);
+    const cantidad = parseInt(cantidadVenta.value);
+
+    let producto = data.productos.find(p=>p.id===id);
+    if(producto && producto.cantidad >= cantidad){
+        producto.cantidad -= cantidad;
+        data.ventas.push({
+            total: producto.precio * cantidad
+        });
+        guardarData(data);
+        actualizarTodo();
+    }else{
+        alert("Stock insuficiente");
+    }
+}
+
+function actualizarTodo(){
+    let data = obtenerData();
+
+    tablaInventario.innerHTML="";
+    productoVenta.innerHTML="";
+
+    data.productos.forEach(p=>{
+        tablaInventario.innerHTML+=`
+        <tr>
+            <td>${p.id}</td>
+            <td>${p.nombre}</td>
+            <td>${p.cantidad}</td>
+            <td>$${p.precio}</td>
+            <td>${p.fecha}</td>
+        </tr>`;
+
+        productoVenta.innerHTML+=`<option value="${p.id}">${p.nombre}</option>`;
+    });
+
+    totalProductos.textContent=data.productos.length;
+    totalVentas.textContent=data.ventas.reduce((a,v)=>a+v.total,0);
+}
+</script>
+
+</body>
+</html>
