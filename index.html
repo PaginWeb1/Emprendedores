@@ -3,317 +3,306 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EmprendePro</title>
+<title>Inventario Pro | Sistema Comercial</title>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Manifest para PWA -->
+<link rel="manifest" href="manifest.json">
 
 <style>
-body{
-    margin:0;
-    font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg,#ff4ecd,#6a5cff);
-    color:#333;
-}
-.container{
-    max-width:1200px;
-    margin:auto;
-    padding:20px;
-}
-.card{
-    background:white;
-    padding:20px;
-    border-radius:15px;
-    box-shadow:0 5px 15px rgba(0,0,0,0.2);
-    margin-bottom:20px;
-}
-input, select{
-    padding:10px;
-    margin:5px 0;
-    width:100%;
-    border-radius:8px;
-    border:1px solid #ccc;
-}
-button{
-    background:#ff4ecd;
-    color:white;
-    border:none;
-    padding:10px;
-    border-radius:8px;
-    cursor:pointer;
-    margin-top:10px;
-}
-button:hover{
-    background:#e03fb8;
-}
-.menu{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    margin-bottom:20px;
-}
-.menu button{ flex:1; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#f1f5f9;color:#1e293b;}
 
-.table-container{
-    overflow-x:auto;
-}
-table{
-    width:100%;
-    border-collapse:collapse;
-}
-th, td{
-    padding:10px;
-    text-align:left;
-    border-bottom:1px solid #ddd;
-}
-.stats{
-    display:flex;
-    gap:15px;
-    flex-wrap:wrap;
-}
-.stat-box{
-    flex:1;
-    min-width:150px;
-    background:#f7f7f7;
-    padding:15px;
-    border-radius:10px;
-    text-align:center;
-    font-weight:bold;
-}
-@media(max-width:768px){
-    .stats{ flex-direction:column; }
-}
-.mensaje{
-    color:red;
-    font-size:14px;
-}
+/* LOGIN */
+.login-container{height:100vh;display:flex;justify-content:center;align-items:center}
+.login-box{background:white;padding:40px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.1);width:320px}
+.login-box input{width:100%;padding:12px;margin-bottom:15px;border-radius:8px;border:1px solid #ccc}
+.login-box button{width:100%;padding:12px;border:none;border-radius:8px;background:#2563eb;color:white;font-weight:600;cursor:pointer}
+
+/* APP */
+#app{display:none;}
+header{background:#0f172a;color:white;padding:15px 20px;display:flex;justify-content:space-between;align-items:center}
+header button{background:#ef4444;color:white;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
+
+.container{max-width:1200px;margin:25px auto;padding:0 15px}
+.dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:25px}
+.card{background:white;padding:20px;border-radius:14px;box-shadow:0 8px 20px rgba(0,0,0,0.05);transition:0.3s ease}
+.card:hover{transform:translateY(-5px)}
+.card p{font-size:22px;font-weight:700}
+
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:15px}
+input,select{padding:12px;border-radius:8px;border:1px solid #ccc}
+button{padding:12px;border:none;border-radius:8px;font-weight:600;cursor:pointer}
+
+.btn-primary{background:#2563eb;color:white;}
+.btn-success{background:#16a34a;color:white;}
+.btn-danger{background:#ef4444;color:white;}
+.btn-warning{background:#f59e0b;color:white;}
+
+.table-container{background:white;border-radius:14px;box-shadow:0 8px 20px rgba(0,0,0,0.05);overflow-x:auto;margin-bottom:25px}
+table{width:100%;border-collapse:collapse;min-width:600px}
+th{background:#0f172a;color:white;padding:12px;text-align:left}
+td{padding:12px;border-bottom:1px solid #eee}
+.stock-bajo{background:#fee2e2}
+
+/* Charts */
+canvas{background:white;border-radius:14px;padding:15px;box-shadow:0 8px 20px rgba(0,0,0,0.05);margin-bottom:25px}
+
+/* Planes */
+.planes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:25px}
+.plan-card{background:white;padding:20px;border-radius:14px;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,0.05)}
+.plan-card h3{color:#2563eb;margin-bottom:10px}
+
+/* Responsive */
+@media(max-width:768px){.hero h1{font-size:30px}}
 </style>
 </head>
 <body>
 
+<!-- LOGIN -->
+<div class="login-container" id="login">
+    <div class="login-box">
+        <h2>Inventario Pro</h2>
+        <input type="text" id="usuario" placeholder="Usuario">
+        <input type="password" id="password" placeholder="Contraseña">
+        <button onclick="iniciarSesion()">Ingresar</button>
+    </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+<header>
+    <div>Inventario Pro</div>
+    <button onclick="cerrarSesion()">Cerrar Sesión</button>
+</header>
+
 <div class="container">
 
-<div id="authSection" class="card">
-    <h2>EmprendePro 💜</h2>
-    <input type="text" id="usuario" placeholder="Usuario">
-    <input type="password" id="password" placeholder="Contraseña">
-    <button onclick="registrar()">Registrarse</button>
-    <button onclick="login()">Ingresar</button>
-    <p class="mensaje" id="mensajeAuth"></p>
-</div>
-
-<div id="sistema" style="display:none;">
-
-<div class="menu">
-    <button onclick="mostrar('dashboard')">Dashboard</button>
-    <button onclick="mostrar('inventario')">Inventario</button>
-    <button onclick="mostrar('ventas')">Ventas</button>
-    <button onclick="logout()">Salir</button>
-</div>
-
-<div id="dashboard" class="card">
-    <h3>Resumen del Negocio</h3>
-    <div class="stats">
-        <div class="stat-box">Productos: <span id="totalProductos">0</span></div>
-        <div class="stat-box">Ventas: $<span id="totalVentas">0</span></div>
+<!-- DASHBOARD -->
+<div class="dashboard">
+    <div class="card">
+        <div>Total Productos</div>
+        <p id="totalProductos">0</p>
+    </div>
+    <div class="card">
+        <div>Total Unidades</div>
+        <p id="totalUnidades">0</p>
+    </div>
+    <div class="card">
+        <div>Valor Total</div>
+        <p id="valorTotal">$0</p>
+    </div>
+    <div class="card">
+        <div>Total Ventas</div>
+        <p id="totalVentas">$0</p>
     </div>
 </div>
 
-<div id="inventario" class="card" style="display:none;">
-    <h3>Inventario</h3>
-    <input type="text" id="nombreProducto" placeholder="Nombre Producto">
-    <input type="number" id="cantidadProducto" placeholder="Cantidad">
-    <input type="number" id="precioProducto" placeholder="Precio">
-    <button onclick="agregarProducto()">Agregar Producto</button>
+<!-- Buscador -->
+<input type="text" id="buscador" placeholder="Buscar producto..." onkeyup="filtrarProductos()" style="margin-bottom:15px;width:100%;">
 
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Cantidad</th>
-                    <th>Precio</th>
-                    <th>Fecha</th>
-                </tr>
-            </thead>
-            <tbody id="tablaInventario"></tbody>
-        </table>
-    </div>
+<!-- Formulario Productos -->
+<div class="form-grid">
+    <input type="text" id="nombre" placeholder="Producto">
+    <input type="number" id="cantidad" placeholder="Cantidad">
+    <input type="number" id="precio" placeholder="Precio">
+    <input type="number" id="stockMinimo" placeholder="Stock mínimo">
+    <button class="btn-primary" onclick="agregarProducto()">Agregar</button>
+    <button class="btn-success" onclick="exportarExcel()">Exportar CSV</button>
 </div>
 
-<div id="ventas" class="card" style="display:none;">
-    <h3>Registrar Venta</h3>
-    <select id="productoVenta"></select>
-    <input type="number" id="cantidadVenta" placeholder="Cantidad">
-    <button onclick="registrarVenta()">Vender</button>
+<!-- Tabla Productos -->
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Producto</th>
+<th>Cantidad</th>
+<th>Precio</th>
+<th>Total</th>
+<th>Fecha</th>
+<th>Acción</th>
+</tr>
+</thead>
+<tbody id="tablaProductos"></tbody>
+</table>
+</div>
+
+<!-- Registro de ventas -->
+<div class="table-container">
+<h3>Registrar Venta</h3>
+<table>
+<thead>
+<tr><th>Producto</th><th>Cantidad</th><th>Precio Unitario</th><th>Total</th><th>Acción</th></tr>
+</thead>
+<tbody id="tablaVentas"></tbody>
+</table>
+</div>
+
+<!-- Gráfico Ventas -->
+<canvas id="graficoVentas" height="200"></canvas>
+
+<!-- Planes de Pago Simulados -->
+<h3>Planes de Pago</h3>
+<div class="planes">
+<div class="plan-card">
+<h3>Básico</h3>
+<p>$10.000 / mes</p>
+<button class="btn-primary" onclick="alert('Plan Básico contratado')">Contratar</button>
+</div>
+<div class="plan-card">
+<h3>Pro</h3>
+<p>$20.000 / mes</p>
+<button class="btn-primary" onclick="alert('Plan Pro contratado')">Contratar</button>
+</div>
+<div class="plan-card">
+<h3>Premium</h3>
+<p>$30.000 / mes</p>
+<button class="btn-primary" onclick="alert('Plan Premium contratado')">Contratar</button>
+</div>
 </div>
 
 </div>
 </div>
 
 <script>
-let usuarioActivo = null;
+// Datos
+let productos = JSON.parse(localStorage.getItem("inventarioPro")) || [];
+let ventas = JSON.parse(localStorage.getItem("ventasPro")) || [];
 
-/* 🔐 Encriptación básica */
-function encriptar(texto){
-    return btoa(texto);
-}
-
-/* 🔁 Auto Login */
-window.onload = function(){
-    const sesion = localStorage.getItem("sesionActiva");
-    if(sesion){
-        usuarioActivo = sesion;
-        iniciarSistema();
+// LOGIN
+function iniciarSesion(){
+    const usuario = document.getElementById("usuario").value.trim();
+    const password = document.getElementById("password").value.trim();
+    if(usuario==="admin" && password==="1234"){
+        localStorage.setItem("sesionActiva","true");
+        mostrarApp();
+    }else{
+        alert("Credenciales incorrectas");
     }
 }
+function cerrarSesion(){ localStorage.removeItem("sesionActiva"); location.reload(); }
+function mostrarApp(){ document.getElementById("login").style.display="none"; document.getElementById("app").style.display="block"; }
+if(localStorage.getItem("sesionActiva")==="true"){ mostrarApp(); }
 
-function registrar(){
-    const user = usuario.value.trim();
-    const pass = password.value.trim();
-
-    if(!user || !pass){
-        mensajeAuth.textContent="Completa todos los campos";
-        return;
-    }
-
-    if(localStorage.getItem(user)){
-        mensajeAuth.textContent="El usuario ya existe";
-        return;
-    }
-
-    const nuevoUsuario = {
-        password: encriptar(pass),
-        productos: [],
-        ventas: []
-    };
-
-    localStorage.setItem(user, JSON.stringify(nuevoUsuario));
-    mensajeAuth.style.color="green";
-    mensajeAuth.textContent="Usuario registrado correctamente";
-    usuario.value="";
-    password.value="";
-}
-
-function login(){
-    const user = usuario.value.trim();
-    const pass = password.value.trim();
-    const data = JSON.parse(localStorage.getItem(user));
-
-    if(!data){
-        mensajeAuth.textContent="Usuario no encontrado";
-        return;
-    }
-
-    if(data.password !== encriptar(pass)){
-        mensajeAuth.textContent="Contraseña incorrecta";
-        return;
-    }
-
-    usuarioActivo = user;
-    localStorage.setItem("sesionActiva", user);
-    iniciarSistema();
-}
-
-function iniciarSistema(){
-    authSection.style.display="none";
-    sistema.style.display="block";
-    actualizarTodo();
-}
-
-function logout(){
-    usuarioActivo=null;
-    localStorage.removeItem("sesionActiva");
-    sistema.style.display="none";
-    authSection.style.display="block";
-}
-
-function mostrar(seccion){
-    dashboard.style.display="none";
-    inventario.style.display="none";
-    ventas.style.display="none";
-    document.getElementById(seccion).style.display="block";
-}
-
-function obtenerData(){
-    return JSON.parse(localStorage.getItem(usuarioActivo));
-}
-
-function guardarData(data){
-    localStorage.setItem(usuarioActivo, JSON.stringify(data));
-}
+// Inventario
+function guardar(){ localStorage.setItem("inventarioPro", JSON.stringify(productos)); localStorage.setItem("ventasPro", JSON.stringify(ventas)); }
+function formatoCLP(valor){ return valor.toLocaleString("es-CL",{style:"currency",currency:"CLP"}); }
 
 function agregarProducto(){
-    let data = obtenerData();
-
-    if(!nombreProducto.value || !cantidadProducto.value || !precioProducto.value){
-        alert("Completa todos los campos");
-        return;
-    }
-
-    const nuevo = {
-        id: Date.now(),
-        nombre: nombreProducto.value,
-        cantidad: parseInt(cantidadProducto.value),
-        precio: parseFloat(precioProducto.value),
-        fecha: new Date().toLocaleDateString()
-    };
-
-    data.productos.push(nuevo);
-    guardarData(data);
-
-    nombreProducto.value="";
-    cantidadProducto.value="";
-    precioProducto.value="";
-
-    actualizarTodo();
+    const nombre = document.getElementById("nombre").value.trim();
+    const cantidad = parseInt(document.getElementById("cantidad").value);
+    const precio = parseFloat(document.getElementById("precio").value);
+    const stockMinimo = parseInt(document.getElementById("stockMinimo").value);
+    if(!nombre || isNaN(cantidad) || isNaN(precio)){ alert("Complete los campos correctamente"); return; }
+    productos.push({id:Date.now(),nombre,cantidad,precio,stockMinimo,fecha:new Date().toLocaleDateString()});
+    document.querySelectorAll(".form-grid input").forEach(i=>i.value="");
+    guardar(); mostrarProductos(); mostrarVentas(); actualizarGrafico();
 }
 
-function registrarVenta(){
-    let data = obtenerData();
-    const id = parseInt(productoVenta.value);
-    const cantidad = parseInt(cantidadVenta.value);
-
-    let producto = data.productos.find(p=>p.id===id);
-
-    if(!cantidad || cantidad<=0){
-        alert("Cantidad inválida");
-        return;
-    }
-
-    if(producto && producto.cantidad >= cantidad){
-        producto.cantidad -= cantidad;
-        data.ventas.push({
-            total: producto.precio * cantidad,
-            fecha: new Date().toLocaleDateString()
-        });
-        guardarData(data);
-        cantidadVenta.value="";
-        actualizarTodo();
-    }else{
-        alert("Stock insuficiente");
-    }
+function editarProducto(index){
+    let nuevoNombre = prompt("Nuevo nombre", productos[index].nombre);
+    if(nuevoNombre){ productos[index].nombre = nuevoNombre; guardar(); mostrarProductos(); actualizarGrafico(); }
 }
 
-function actualizarTodo(){
-    let data = obtenerData();
+function eliminarProducto(index){ if(confirm("¿Eliminar producto?")){ productos.splice(index,1); guardar(); mostrarProductos(); actualizarGrafico(); } }
 
-    tablaInventario.innerHTML="";
-    productoVenta.innerHTML="";
-
-    data.productos.forEach(p=>{
-        tablaInventario.innerHTML+=`
-        <tr>
+function mostrarProductos(){
+    const tabla = document.getElementById("tablaProductos");
+    tabla.innerHTML="";
+    let totalUnidades=0, valorTotal=0;
+    productos.forEach((p,index)=>{
+        let total=p.cantidad*p.precio; totalUnidades+=p.cantidad; valorTotal+=total;
+        let filaClass = p.cantidad <= p.stockMinimo ? "stock-bajo" : "";
+        tabla.innerHTML+=`
+        <tr class="${filaClass}">
             <td>${p.id}</td>
             <td>${p.nombre}</td>
             <td>${p.cantidad}</td>
-            <td>$${p.precio}</td>
+            <td>${formatoCLP(p.precio)}</td>
+            <td>${formatoCLP(total)}</td>
             <td>${p.fecha}</td>
+            <td>
+                <button class="btn-warning" onclick="editarProducto(${index})">Editar</button>
+                <button class="btn-danger" onclick="eliminarProducto(${index})">Eliminar</button>
+                <button class="btn-success" onclick="registrarVenta(${index})">Vender</button>
+            </td>
         </tr>`;
-
-        productoVenta.innerHTML+=`<option value="${p.id}">${p.nombre}</option>`;
     });
+    document.getElementById("totalProductos").innerText=productos.length;
+    document.getElementById("totalUnidades").innerText=totalUnidades;
+    document.getElementById("valorTotal").innerText=formatoCLP(valorTotal);
+}
 
-    totalProductos.textContent=data.productos.length;
-    totalVentas.textContent=data.ventas.reduce((a,v)=>a+v.total,0);
+function filtrarProductos(){
+    const texto = document.getElementById("buscador").value.toLowerCase();
+    document.querySelectorAll("#tablaProductos tr").forEach(fila=>{ fila.style.display = fila.innerText.toLowerCase().includes(texto) ? "" : "none"; });
+}
+
+// Ventas
+function registrarVenta(index){
+    let cant = prompt("Cantidad a vender", "1");
+    cant = parseInt(cant);
+    if(isNaN(cant) || cant<=0 || cant>productos[index].cantidad){ alert("Cantidad inválida"); return; }
+    let producto = productos[index];
+    producto.cantidad -= cant;
+    let totalVenta = cant * producto.precio;
+    ventas.push({id:Date.now(),nombre:producto.nombre,cantidad:cant,precio:producto.precio,total:totalVenta,fecha:new Date().toLocaleDateString()});
+    guardar(); mostrarProductos(); mostrarVentas(); actualizarGrafico();
+}
+
+function mostrarVentas(){
+    const tabla = document.getElementById("tablaVentas");
+    tabla.innerHTML="";
+    let totalVentasValor = 0;
+    ventas.forEach((v,i)=>{
+        totalVentasValor += v.total;
+        tabla.innerHTML+=`<tr>
+            <td>${v.nombre}</td>
+            <td>${v.cantidad}</td>
+            <td>${formatoCLP(v.precio)}</td>
+            <td>${formatoCLP(v.total)}</td>
+            <td><button class="btn-danger" onclick="eliminarVenta(${i})">Eliminar</button></td>
+        </tr>`;
+    });
+    document.getElementById("totalVentas").innerText=formatoCLP(totalVentasValor);
+}
+
+function eliminarVenta(index){
+    if(confirm("Eliminar venta?")){ ventas.splice(index,1); guardar(); mostrarVentas(); actualizarGrafico(); }
+}
+
+// Exportar CSV
+function exportarExcel(){
+    if(productos.length===0){ alert("No hay productos"); return; }
+    let fecha = new Date().toLocaleDateString();
+    let csv="Producto,Cantidad,Precio,Total,Fecha\n";
+    productos.forEach(p=>{ csv+=`${p.nombre},${p.cantidad},${p.precio},${p.cantidad*p.precio},${p.fecha}\n`; });
+    let blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}); let url=URL.createObjectURL(blob);
+    let a=document.createElement("a"); a.href=url; a.download=`inventario_${fecha}.csv`; a.click();
+}
+
+// Gráfico
+let chart;
+function actualizarGrafico(){
+    const ctx = document.getElementById("graficoVentas").getContext("2d");
+    const labels = ventas.map(v=>v.nombre);
+    const data = ventas.map(v=>v.total);
+    if(chart) chart.destroy();
+    chart = new Chart(ctx,{type:'bar',data:{labels, datasets:[{label:'Ventas',data,backgroundColor:'#2563eb'}]},options:{responsive:true}});
+}
+
+mostrarProductos(); mostrarVentas(); actualizarGrafico();
+
+// Registrar service worker PWA
+if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').then(()=>console.log("SW registrado")).catch(err=>console.log(err));
 }
 </script>
 
