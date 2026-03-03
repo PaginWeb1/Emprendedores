@@ -4,20 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EmprendePro | Panel de Ventas</title>
-
-<!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-
-<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',sans-serif;background:#f1f5f9;color:#1e293b;margin:0;padding:0}
 
 /* LOGIN */
 .login-container{height:100vh;display:flex;justify-content:center;align-items:center}
-.login-box{background:white;padding:40px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.1);width:320px}
+.login-box{background:white;padding:40px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.1);width:320px;text-align:center}
 .login-box input{width:100%;padding:12px;margin-bottom:15px;border-radius:8px;border:1px solid #ccc}
 .login-box button{width:100%;padding:12px;border:none;border-radius:8px;background:#2563eb;color:white;font-weight:600;cursor:pointer}
 
@@ -44,7 +39,7 @@ button{padding:12px;border:none;border-radius:8px;font-weight:600;cursor:pointer
 .table-container{background:white;border-radius:14px;box-shadow:0 8px 20px rgba(0,0,0,0.05);overflow-x:auto;margin-bottom:25px}
 table{width:100%;border-collapse:collapse;min-width:600px}
 th{background:#0f172a;color:white;padding:12px;text-align:left}
-td{padding:12px;border-bottom:1px solid #eee}
+td{padding:12px;border-bottom:1px solid #eee;text-align:center}
 .stock-bajo{background:#fee2e2}
 
 /* Gráfico */
@@ -54,6 +49,9 @@ canvas{background:white;border-radius:14px;padding:15px;box-shadow:0 8px 20px rg
 .planes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:25px}
 .plan-card{background:white;padding:20px;border-radius:14px;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,0.05)}
 .plan-card h3{color:#2563eb;margin-bottom:10px}
+
+/* Responsive */
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}.dashboard{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -99,10 +97,11 @@ canvas{background:white;border-radius:14px;padding:15px;box-shadow:0 8px 20px rg
 
 <!-- Tabla Productos -->
 <div class="table-container">
+<h3>Productos</h3>
 <table>
 <thead>
 <tr>
-<th>ID</th><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Total</th><th>Acción</th>
+<th>ID</th><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Total</th><th>Acciones</th>
 </tr>
 </thead>
 <tbody id="tablaProductos"></tbody>
@@ -114,7 +113,7 @@ canvas{background:white;border-radius:14px;padding:15px;box-shadow:0 8px 20px rg
 <h3>Ventas</h3>
 <table>
 <thead>
-<tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Total</th></tr>
+<tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Total</th><th>Fecha</th></tr>
 </thead>
 <tbody id="tablaVentas"></tbody>
 </table>
@@ -150,7 +149,7 @@ function cerrarSesion(){ localStorage.removeItem("sesionActiva"); location.reloa
 function mostrarApp(){ document.getElementById("login").style.display="none"; document.getElementById("app").style.display="block"; }
 if(localStorage.getItem("sesionActiva")==="true"){ mostrarApp(); }
 
-// Funciones
+// Guardar
 function guardar(){ localStorage.setItem("productosEmprende",JSON.stringify(productos)); localStorage.setItem("ventasEmprende",JSON.stringify(ventas)); }
 function formatoCLP(valor){ return valor.toLocaleString("es-CL",{style:"currency",currency:"CLP"}); }
 
@@ -170,16 +169,36 @@ function mostrarProductos(){
     const tabla=document.getElementById("tablaProductos");
     tabla.innerHTML="";
     productos.forEach((p,index)=>{
-        tabla.innerHTML+=`<tr>
+        const stockClass = p.cantidad <= 2 ? 'stock-bajo' : '';
+        tabla.innerHTML+=`<tr class="${stockClass}">
         <td>${p.id}</td>
         <td>${p.nombre}</td>
         <td>${p.cantidad}</td>
         <td>${formatoCLP(p.precio)}</td>
         <td>${formatoCLP(p.cantidad*p.precio)}</td>
-        <td><button class="btn-success" onclick="registrarVenta(${index})">Vender</button></td>
+        <td>
+            <button class="btn-success" onclick="registrarVenta(${index})">Vender</button>
+            <button class="btn-warning" onclick="editarProducto(${index})">Editar</button>
+            <button class="btn-danger" onclick="eliminarProducto(${index})">Eliminar</button>
+        </td>
         </tr>`;
     });
+    document.getElementById("totalProductos").innerText=productos.reduce((sum,p)=>sum+p.cantidad,0);
 }
+
+// Editar Producto
+function editarProducto(index){
+    const nuevoNombre = prompt("Nombre del producto", productos[index].nombre);
+    const nuevaCantidad = parseInt(prompt("Cantidad", productos[index].cantidad));
+    const nuevoPrecio = parseFloat(prompt("Precio", productos[index].precio));
+    if(nuevoNombre && !isNaN(nuevaCantidad) && !isNaN(nuevoPrecio)){
+        productos[index] = { ...productos[index], nombre: nuevoNombre, cantidad: nuevaCantidad, precio: nuevoPrecio };
+        guardar(); mostrarProductos(); actualizarGrafico();
+    }
+}
+
+// Eliminar Producto
+function eliminarProducto(index){ if(confirm("Eliminar producto?")){ productos.splice(index,1); guardar(); mostrarProductos(); actualizarGrafico(); } }
 
 // Registrar Venta
 function registrarVenta(index){
@@ -187,7 +206,8 @@ function registrarVenta(index){
     if(isNaN(cant)||cant<=0||cant>productos[index].cantidad){ alert("Cantidad inválida"); return; }
     let p=productos[index]; p.cantidad-=cant;
     let total=cant*p.precio;
-    ventas.push({nombre:p.nombre,cantidad:cant,precio:p.precio,total});
+    const fecha=new Date().toLocaleString();
+    ventas.push({nombre:p.nombre,cantidad:cant,precio:p.precio,total,fecha});
     guardar(); mostrarProductos(); mostrarVentas(); actualizarGrafico();
 }
 
@@ -203,6 +223,7 @@ function mostrarVentas(){
         <td>${v.cantidad}</td>
         <td>${formatoCLP(v.precio)}</td>
         <td>${formatoCLP(v.total)}</td>
+        <td>${v.fecha}</td>
         </tr>`;
     });
     document.getElementById("totalVentas").innerText=formatoCLP(totalVentas);
@@ -212,10 +233,15 @@ function mostrarVentas(){
 let chart;
 function actualizarGrafico(){
     const ctx=document.getElementById("graficoVentas").getContext("2d");
-    const labels=ventas.map(v=>v.nombre);
-    const data=ventas.map(v=>v.total);
+    const labels = [...new Set(ventas.map(v=>v.nombre))]; // productos únicos
+    const data = labels.map(label => ventas.filter(v=>v.nombre===label).reduce((sum,v)=>sum+v.total,0));
+    const colors = labels.map(_=>`hsl(${Math.random()*360},70%,50%)`);
     if(chart) chart.destroy();
-    chart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Ventas',data,backgroundColor:'#2563eb'}]},options:{responsive:true}});
+    chart=new Chart(ctx,{
+        type:'bar',
+        data:{labels,datasets:[{label:'Ventas',data,backgroundColor:colors}]},
+        options:{responsive:true,plugins:{legend:{display:false}}}
+    });
 }
 
 mostrarProductos(); mostrarVentas(); actualizarGrafico();
