@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EmprendePro | Panel de Ventas</title>
+<title>EmprendePro Avanzado</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -27,18 +27,19 @@ header button{background:#ef4444;color:white;border:none;padding:8px 12px;border
 .card:hover{transform:translateY(-5px)}
 .card p{font-size:22px;font-weight:700}
 
+/* Formularios y botones */
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:15px}
 input,select{padding:12px;border-radius:8px;border:1px solid #ccc}
 button{padding:12px;border:none;border-radius:8px;font-weight:600;cursor:pointer}
-
 .btn-primary{background:#2563eb;color:white;}
 .btn-success{background:#16a34a;color:white;}
 .btn-danger{background:#ef4444;color:white;}
 .btn-warning{background:#f59e0b;color:white;}
 
+/* Tablas */
 .table-container{background:white;border-radius:14px;box-shadow:0 8px 20px rgba(0,0,0,0.05);overflow-x:auto;margin-bottom:25px}
 table{width:100%;border-collapse:collapse;min-width:600px}
-th{background:#0f172a;color:white;padding:12px;text-align:left}
+th{background:#0f172a;color:white;padding:12px;text-align:center}
 td{padding:12px;border-bottom:1px solid #eee;text-align:center}
 .stock-bajo{background:#fee2e2}
 
@@ -49,6 +50,10 @@ canvas{background:white;border-radius:14px;padding:15px;box-shadow:0 8px 20px rg
 .planes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:25px}
 .plan-card{background:white;padding:20px;border-radius:14px;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,0.05)}
 .plan-card h3{color:#2563eb;margin-bottom:10px}
+
+/* Buscadores */
+.buscar-container{margin-bottom:15px;display:flex;gap:10px;flex-wrap:wrap}
+.buscar-container input{flex:1}
 
 /* Responsive */
 @media(max-width:600px){.form-grid{grid-template-columns:1fr}.dashboard{grid-template-columns:1fr}}
@@ -69,7 +74,7 @@ canvas{background:white;border-radius:14px;padding:15px;box-shadow:0 8px 20px rg
 <!-- APP -->
 <div id="app">
 <header>
-    <div>EmprendePro</div>
+    <div>EmprendePro Avanzado</div>
     <button onclick="cerrarSesion()">Cerrar Sesión</button>
 </header>
 
@@ -85,6 +90,10 @@ canvas{background:white;border-radius:14px;padding:15px;box-shadow:0 8px 20px rg
         <div>Total Ventas</div>
         <p id="totalVentas">$0</p>
     </div>
+    <div class="card">
+        <div>Productos Stock Bajo</div>
+        <p id="stockBajo">0</p>
+    </div>
 </div>
 
 <!-- Formulario Productos -->
@@ -93,6 +102,12 @@ canvas{background:white;border-radius:14px;padding:15px;box-shadow:0 8px 20px rg
     <input type="number" id="cantidad" placeholder="Cantidad">
     <input type="number" id="precio" placeholder="Precio">
     <button class="btn-primary" onclick="agregarProducto()">Agregar Producto</button>
+</div>
+
+<!-- Buscador Productos -->
+<div class="buscar-container">
+    <input type="text" id="buscarProducto" placeholder="Buscar producto..." oninput="filtrarProductos()">
+    <button class="btn-warning" onclick="exportarCSV('productos')">Exportar Productos</button>
 </div>
 
 <!-- Tabla Productos -->
@@ -106,6 +121,12 @@ canvas{background:white;border-radius:14px;padding:15px;box-shadow:0 8px 20px rg
 </thead>
 <tbody id="tablaProductos"></tbody>
 </table>
+</div>
+
+<!-- Buscador Ventas -->
+<div class="buscar-container">
+    <input type="text" id="buscarVentas" placeholder="Buscar ventas..." oninput="filtrarVentas()">
+    <button class="btn-warning" onclick="exportarCSV('ventas')">Exportar Ventas</button>
 </div>
 
 <!-- Tabla Ventas -->
@@ -137,6 +158,7 @@ canvas{background:white;border-radius:14px;padding:15px;box-shadow:0 8px 20px rg
 // Datos
 let productos = JSON.parse(localStorage.getItem("productosEmprende")) || [];
 let ventas = JSON.parse(localStorage.getItem("ventasEmprende")) || [];
+let nextId = productos.length ? Math.max(...productos.map(p=>p.id)) + 1 : 1;
 
 // LOGIN
 function iniciarSesion(){
@@ -159,16 +181,16 @@ function agregarProducto(){
     const cantidad=parseInt(document.getElementById("cantidad").value);
     const precio=parseFloat(document.getElementById("precio").value);
     if(!nombre || isNaN(cantidad)||isNaN(precio)){ alert("Complete los campos"); return; }
-    productos.push({id:Date.now(),nombre,cantidad,precio});
+    productos.push({id:nextId++,nombre,cantidad,precio});
     document.getElementById("nombre").value=""; document.getElementById("cantidad").value=""; document.getElementById("precio").value="";
     guardar(); mostrarProductos(); actualizarGrafico();
 }
 
 // Mostrar Productos
-function mostrarProductos(){
+function mostrarProductos(filtered=productos){
     const tabla=document.getElementById("tablaProductos");
     tabla.innerHTML="";
-    productos.forEach((p,index)=>{
+    filtered.forEach((p,index)=>{
         const stockClass = p.cantidad <= 2 ? 'stock-bajo' : '';
         tabla.innerHTML+=`<tr class="${stockClass}">
         <td>${p.id}</td>
@@ -177,17 +199,31 @@ function mostrarProductos(){
         <td>${formatoCLP(p.precio)}</td>
         <td>${formatoCLP(p.cantidad*p.precio)}</td>
         <td>
-            <button class="btn-success" onclick="registrarVenta(${index})">Vender</button>
-            <button class="btn-warning" onclick="editarProducto(${index})">Editar</button>
-            <button class="btn-danger" onclick="eliminarProducto(${index})">Eliminar</button>
+            <button class="btn-success" onclick="registrarVenta(${p.id})">Vender</button>
+            <button class="btn-warning" onclick="editarProducto(${p.id})">Editar</button>
+            <button class="btn-danger" onclick="eliminarProducto(${p.id})">Eliminar</button>
         </td>
         </tr>`;
     });
     document.getElementById("totalProductos").innerText=productos.reduce((sum,p)=>sum+p.cantidad,0);
+    document.getElementById("stockBajo").innerText=productos.filter(p=>p.cantidad<=2).length;
+}
+
+// Filtrar Productos
+function filtrarProductos(){
+    const query=document.getElementById("buscarProducto").value.toLowerCase();
+    mostrarProductos(productos.filter(p=>p.nombre.toLowerCase().includes(query)));
+}
+
+// Filtrar Ventas
+function filtrarVentas(){
+    const query=document.getElementById("buscarVentas").value.toLowerCase();
+    mostrarVentas(ventas.filter(v=>v.nombre.toLowerCase().includes(query)));
 }
 
 // Editar Producto
-function editarProducto(index){
+function editarProducto(id){
+    const index = productos.findIndex(p=>p.id===id);
     const nuevoNombre = prompt("Nombre del producto", productos[index].nombre);
     const nuevaCantidad = parseInt(prompt("Cantidad", productos[index].cantidad));
     const nuevoPrecio = parseFloat(prompt("Precio", productos[index].precio));
@@ -198,10 +234,16 @@ function editarProducto(index){
 }
 
 // Eliminar Producto
-function eliminarProducto(index){ if(confirm("Eliminar producto?")){ productos.splice(index,1); guardar(); mostrarProductos(); actualizarGrafico(); } }
+function eliminarProducto(id){
+    if(confirm("Eliminar producto?")){
+        productos = productos.filter(p=>p.id!==id);
+        guardar(); mostrarProductos(); actualizarGrafico();
+    }
+}
 
 // Registrar Venta
-function registrarVenta(index){
+function registrarVenta(id){
+    const index = productos.findIndex(p=>p.id===id);
     let cant=prompt("Cantidad a vender","1"); cant=parseInt(cant);
     if(isNaN(cant)||cant<=0||cant>productos[index].cantidad){ alert("Cantidad inválida"); return; }
     let p=productos[index]; p.cantidad-=cant;
@@ -212,11 +254,11 @@ function registrarVenta(index){
 }
 
 // Mostrar Ventas
-function mostrarVentas(){
+function mostrarVentas(filtered=ventas){
     const tabla=document.getElementById("tablaVentas");
     tabla.innerHTML="";
     let totalVentas=0;
-    ventas.forEach(v=>{
+    filtered.forEach(v=>{
         totalVentas+=v.total;
         tabla.innerHTML+=`<tr>
         <td>${v.nombre}</td>
@@ -229,11 +271,28 @@ function mostrarVentas(){
     document.getElementById("totalVentas").innerText=formatoCLP(totalVentas);
 }
 
+// Exportar CSV
+function exportarCSV(tipo){
+    let csvContent="";
+    if(tipo==='productos'){
+        csvContent="ID,Producto,Cantidad,Precio,Total\n";
+        productos.forEach(p=>{csvContent+=`${p.id},${p.nombre},${p.cantidad},${p.precio},${p.cantidad*p.precio}\n`;});
+    }else{
+        csvContent="Producto,Cantidad,Precio,Total,Fecha\n";
+        ventas.forEach(v=>{csvContent+=`${v.nombre},${v.cantidad},${v.precio},${v.total},${v.fecha}\n`;});
+    }
+    const blob=new Blob([csvContent],{type:'text/csv;charset=utf-8;'});
+    const link=document.createElement("a");
+    link.href=URL.createObjectURL(blob);
+    link.download=`${tipo}.csv`;
+    link.click();
+}
+
 // Gráfico Ventas
 let chart;
 function actualizarGrafico(){
     const ctx=document.getElementById("graficoVentas").getContext("2d");
-    const labels = [...new Set(ventas.map(v=>v.nombre))]; // productos únicos
+    const labels = [...new Set(ventas.map(v=>v.nombre))];
     const data = labels.map(label => ventas.filter(v=>v.nombre===label).reduce((sum,v)=>sum+v.total,0));
     const colors = labels.map(_=>`hsl(${Math.random()*360},70%,50%)`);
     if(chart) chart.destroy();
